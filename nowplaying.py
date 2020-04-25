@@ -28,7 +28,7 @@ class Client:
             params = {
                 'client_id': auth_data['client_id'],
                 'client_secret': auth_data['client_secret'],
-                'scope': 'song_requests song_requests_queue',
+                'scope': 'song_requests_queue',
                 'redirect_uri': Client.URI_REDIRECT,
                 'response_type': 'code'
             }
@@ -104,3 +104,14 @@ class Client:
             except KeyError:
                 print("Your auth.json file is likely corrupted.")
                 return None
+
+    def get_queue(self):
+        try:
+            response = self.session.get("{}song_requests/queue".format(Client.URI_API))
+            if response.status_code == 200:
+                return json.loads(response.text)
+            else:
+                print("Error getting song queue:")
+                print(response.text)
+        except (requests.HTTPError, requests.exceptions.SSLError) as ex:
+            print('An exception occurred while getting the song queue.', ex)
