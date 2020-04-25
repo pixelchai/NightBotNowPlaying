@@ -72,7 +72,7 @@ class Client:
         self.config_path = config_data.get("path", "np.txt")
 
         self.config_update_delay = config_data.get("update_delay", 1)
-        self.config_fancy_limit = config_data.get("fancy_limit", True)
+        self.config_fancy_limit = config_data.get("fancy_limit", False)
 
     def _authorize(self, auth_data):
         try:
