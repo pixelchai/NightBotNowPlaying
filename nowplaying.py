@@ -7,6 +7,34 @@ import requests
 from typing import Optional
 
 
+def substitute_string(input_string: str, data: dict):
+    output = ""
+
+    buf = ""  # buffer for reading in variable references
+    bracket_level = 0
+    for char in input_string:
+        if char == '{':
+            bracket_level += 1
+        elif char == '}':
+            bracket_level -= 1
+
+            if bracket_level == 0:
+                # bracket closed => need to evaluate and flush variable
+                output += data.get(buf, "??")
+                buf = ""
+        else:
+            if bracket_level > 0:  # if within a bracket
+                buf += char
+            else:
+                output += char
+
+    if bracket_level > 0:
+        print("Warning: your string has {} unclosed bracket(s)!".format(bracket_level))
+    elif bracket_level < 0:
+        print("Warning: your string has {} unopened bracket(s)!".format(-bracket_level))
+    return output
+
+
 class Client:
     URI_AUTH = "https://api.nightbot.tv/oauth2/authorize"
     URI_TOKEN = "https://api.nightbot.tv/oauth2/token"
@@ -14,6 +42,7 @@ class Client:
     URI_REDIRECT = "https://localhost:5771"
 
     def __init__(self):
+        self.auth_path = os.environ.get("AUTH_PATH", "auth.json")
         self.session = requests.Session()
 
         # get access token
@@ -33,7 +62,7 @@ class Client:
                 'response_type': 'code'
             }
         except KeyError:
-            print("Your auth.json file is likely corrupted.")
+            print("Your auth.json file either is corrupted or does not exist.")
             return None
 
         webbrowser.open(Client.URI_AUTH + "?" + urllib.parse.urlencode(params))
@@ -65,7 +94,7 @@ class Client:
                     assert token_data['token_type'] == 'bearer'
 
                     # write data to file
-                    with open("auth.json", "w") as f:
+                    with open(self.auth_path, "w") as f:
                         json.dump(auth_data, f)
 
                     # return access_token
@@ -83,8 +112,8 @@ class Client:
     def _get_token(self) -> Optional[str]:
         # load auth data from auth.json if it exits
         auth_data = {}
-        if os.path.isfile("auth.json"):
-            with open("auth.json", "r") as f:
+        if os.path.isfile(self.auth_path):
+            with open(self.auth_path, "r") as f:
                 auth_data = json.load(f)
 
         if 'access_token' not in auth_data:

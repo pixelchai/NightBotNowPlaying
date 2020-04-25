@@ -7,3 +7,4 @@ dev.py
 
 # config
 auth.json
+auth_dev.json
