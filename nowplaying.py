@@ -3,19 +3,24 @@ import json
 import time
 import urllib.parse
 import webbrowser
+import requests
 from typing import Optional
-from NightPy.nightpy import NightPy
+
 
 class Client:
-    AUTH_URI = "https://api.nightbot.tv/oauth2/authorize"
+    URI_AUTH = "https://api.nightbot.tv/oauth2/authorize"
+    URI_TOKEN = "https://api.nightbot.tv/oauth2/token"
+    URI_API = "https://api.nightbot.tv/1/"
 
     def __init__(self):
-        # get auth token
-        auth_token = self.get_token()
-        if auth_token is None:
+        self.session = requests.Session()
+
+        # get access token
+        access_token = self._get_token()
+        if access_token is None:
             return
 
-        self.np = NightPy(auth_token)
+        self.session.headers.update({'Authorization': 'Bearer {0}'.format(access_token)})
 
     def _authorize(self, auth_data):
         try:
@@ -30,16 +35,51 @@ class Client:
             print("Your auth.json file is likely corrupted.")
             return None
 
-        # params_escaped = {
-        #     param_name: urllib.parse.quote(params[param])
-        #     for param_name, param in params.items()
-        # }
-        webbrowser.open(Client.AUTH_URI + "?" + urllib.parse.urlencode(params))
+        webbrowser.open(Client.URI_AUTH + "?" + urllib.parse.urlencode(params))
 
-    def _refresh(self, auth_data):
-        pass  # todo
+        code = input("Please enter the code: ").strip()
+        return self._request_access_token(code, auth_data)
 
-    def get_token(self) -> Optional[str]:
+    def _request_access_token(self, code, auth_data) -> Optional[str]:
+        time_requested = time.time()
+        data = {
+            'client_id': auth_data['client_id'],
+            'client_secret': auth_data['client_secret'],
+            'grant_type': 'authorization_code',
+            'redirect_uri': 'https://localhost',
+            'code': code
+        }
+        try:
+            response = self.session.post(Client.URI_TOKEN, data=data)
+            if response.status_code == 200:
+                token_data = json.loads(response.text)
+
+                # save access token
+                try:
+                    auth_data.update({
+                        'access_token': token_data['access_token'],
+                        'refresh_token': token_data['refresh_token'],
+                        'expire_timestamp': time_requested + token_data['expires_in']
+                    })
+                    assert token_data['token_type'] == 'bearer'
+
+                    # write data to file
+                    with open("auth.json", "w") as f:
+                        json.dump(auth_data, f)
+
+                    # return access_token
+                    return auth_data.get('access_token', None)
+                except (KeyError, AssertionError):
+                    print("The access token received was not as expected")
+            else:
+                print("Error getting access token:")
+                print(response.text)
+        except requests.HTTPError:
+            print("An HTTPError occurred while requesting an access token")
+
+        return None
+
+    def _get_token(self) -> Optional[str]:
         # load auth data from auth.json if it exits
         auth_data = {}
         if os.path.isfile("auth.json"):
