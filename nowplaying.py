@@ -11,6 +11,7 @@ class Client:
     URI_AUTH = "https://api.nightbot.tv/oauth2/authorize"
     URI_TOKEN = "https://api.nightbot.tv/oauth2/token"
     URI_API = "https://api.nightbot.tv/1/"
+    URI_REDIRECT = "https://localhost:5771"
 
     def __init__(self):
         self.session = requests.Session()
@@ -28,7 +29,7 @@ class Client:
                 'client_id': auth_data['client_id'],
                 'client_secret': auth_data['client_secret'],
                 'scope': 'song_requests song_requests_queue',
-                'redirect_uri': 'https://localhost',
+                'redirect_uri': Client.URI_REDIRECT,
                 'response_type': 'code'
             }
         except KeyError:
@@ -46,7 +47,7 @@ class Client:
             'client_id': auth_data['client_id'],
             'client_secret': auth_data['client_secret'],
             'grant_type': 'authorization_code',
-            'redirect_uri': 'https://localhost',
+            'redirect_uri': Client.URI_REDIRECT,
             'code': code
         }
         try:
