@@ -1,5 +1,8 @@
 # NightBotNowPlaying
-Program for overlaying NightBot's current song on your stream 
+Program for overlaying NightBot's current song on your stream.
+
+This works with NightBot and so works with Twitch, YouTube and Mixer.
+It also works with any streaming software which allows for Text to be read from a file and so works with OBS, XSplit, etc.
 
 ## Downloading/Installing
 `cd` into the directory where you want to put the program, then:
