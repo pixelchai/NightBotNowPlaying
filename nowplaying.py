@@ -20,7 +20,7 @@ def substitute_string(input_string: str, data: dict):
 
             if bracket_level == 0:
                 # bracket closed => need to evaluate and flush variable
-                output += data.get(buf.strip(), "??")
+                output += str(data.get(buf.strip(), "??"))
                 buf = ""
         else:
             if bracket_level > 0:  # if within a bracket
@@ -49,6 +49,8 @@ class Client:
         access_token = self._get_token()
         if access_token is None:
             return
+        else:
+            print("Authorized!")
 
         self.session.headers.update({'Authorization': 'Bearer {0}'.format(access_token)})
 
@@ -56,14 +58,18 @@ class Client:
         # defaults
         self.config_text = "{title}"
         self.config_path = "np.txt"
+
+        config_data = {}
         try:
             with open("config.json", "r") as f:
                 config_data = json.load(f)
+        except:
+            print("Warning: unable to read your config.json file")
 
-            self.config_text = config_data["text"]
-            self.config_path = config_data["path"]
-        except KeyError:
-            print("Warning: your config.json file either is corrupted or does not exist. Using default values")
+        self.config_text = config_data.get("text", "{title}")
+        self.config_path = config_data.get("path", "np.txt")
+
+        self.config_update_delay = config_data.get("update_delay", 1)
 
     def _authorize(self, auth_data):
         try:
@@ -158,11 +164,9 @@ class Client:
         except (requests.HTTPError, requests.exceptions.SSLError) as ex:
             print('An exception occurred while getting the song queue', ex)
 
-    def _update(self):
+    def _update(self, queue_data):
         try:
             with open(self.config_path, "w") as f:
-                queue_data = self.get_queue()
-
                 try:
                     current_track = queue_data["_currentSong"]["track"]
                 except KeyError:
@@ -180,6 +184,7 @@ class Client:
                         "title": current_track["title"],
                         "artist": current_track["artist"],
                         "url": current_track["url"],
+                        "duration": current_track["duration"],
                         "requester": requester["name"],
                         "requester.display_name": requester["displayName"]
                     }))
@@ -187,3 +192,14 @@ class Client:
                     print("Error parsing queue data", ex)
         except Exception as ex:
             print("Error writing output", ex)
+
+    def watch(self):
+        while True:
+            queue_data = self.get_queue()
+            self._update(queue_data)
+            time.sleep(self.config_update_delay)
+
+
+if __name__ == '__main__':
+    client = Client()
+    client.watch()
