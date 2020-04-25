@@ -1,5 +1,7 @@
+import math
 import os
 import json
+import random
 import time
 import urllib.parse
 import webbrowser
@@ -70,6 +72,7 @@ class Client:
         self.config_path = config_data.get("path", "np.txt")
 
         self.config_update_delay = config_data.get("update_delay", 1)
+        self.config_fancy_limit = config_data.get("fancy_limit", True)
 
     def _authorize(self, auth_data):
         try:
@@ -164,39 +167,67 @@ class Client:
         except (requests.HTTPError, requests.exceptions.SSLError) as ex:
             print('An exception occurred while getting the song queue', ex)
 
+    @staticmethod
+    def substitute_string(input_string, queue_data):
+        try:
+            current_track = queue_data["_currentSong"]["track"]
+        except KeyError:
+            print("Could not get current track")
+            return
+
+        try:
+            requester = queue_data["_currentSong"]["user"]
+        except KeyError:
+            print("Could not get current track")
+            return
+
+        try:
+            return substitute_string(input_string, {
+                "title": current_track["title"],
+                "artist": current_track["artist"],
+                "url": current_track["url"],
+                "duration": current_track["duration"],
+                "requester": requester["name"],
+                "requester.display_name": requester["displayName"]
+            })
+        except KeyError as ex:
+            print("Error parsing queue data", ex)
+
     def _update(self, queue_data):
         try:
             with open(self.config_path, "w") as f:
-                try:
-                    current_track = queue_data["_currentSong"]["track"]
-                except KeyError:
-                    print("Could not get current track")
-                    return
-
-                try:
-                    requester = queue_data["_currentSong"]["user"]
-                except KeyError:
-                    print("Could not get current track")
-                    return
-
-                try:
-                    f.write(substitute_string(self.config_text, {
-                        "title": current_track["title"],
-                        "artist": current_track["artist"],
-                        "url": current_track["url"],
-                        "duration": current_track["duration"],
-                        "requester": requester["name"],
-                        "requester.display_name": requester["displayName"]
-                    }))
-                except KeyError as ex:
-                    print("Error parsing queue data", ex)
+                f.write(self.substitute_string(self.config_text, queue_data))
         except Exception as ex:
             print("Error writing output", ex)
 
+    def _prob_func(self, distance, song_duration):
+        # see https://www.desmos.com/calculator/k0hjg2up83
+        if 0 < distance < song_duration:
+            return math.pow(math.sin(math.pi * distance/song_duration), 0.3)
+        else:
+            return 0
+
     def watch(self):
+        last_song = ""
+        song_end = 0
+        song_duration = 1e5  # big number to start with
         while True:
+            if self.config_fancy_limit:
+                if random.random() < self._prob_func(song_end - time.time(), song_duration):
+                    time.sleep(self.config_update_delay)
+                    continue
+
             queue_data = self.get_queue()
             self._update(queue_data)
+
+            current_song = queue_data["_currentSong"]["_id"]
+            if last_song != current_song:
+                # song changed
+                print("Song updated:", current_song)
+                last_song = current_song
+
+                song_end = time.time() + queue_data["_currentSong"]["track"]["duration"]
+
             time.sleep(self.config_update_delay)
 
 
