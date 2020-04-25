@@ -1,0 +1,9 @@
+# intellij/pycharm
+.idea/
+NightBotNowPlaying.iml
+
+# dev
+dev.py
+
+# config
+auth.json
