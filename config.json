@@ -1,4 +1,4 @@
 {
-  "output": "{wow}",
-  "out_path": "np.txt"
+  "text": "{title}",
+  "path": "np.txt"
 }
