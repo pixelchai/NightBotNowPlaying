@@ -1,6 +1,6 @@
 # intellij/pycharm
 .idea/
-NightBotCurrentSong.iml
+NightBotNowPlaying.iml
 
 # dev
 dev.py
