@@ -9,7 +9,7 @@ It also works with any streaming software which allows for Text to be read from 
 ```
 git clone https://github.com/pixelzerg/NightBotNowPlaying.git
 cd NightBotNowPlaying
-python3 -m pip -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 
