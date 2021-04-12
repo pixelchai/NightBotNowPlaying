@@ -195,7 +195,7 @@ class Client:
 
     def _update(self, queue_data):
         try:
-            with open(self.config_path, "w") as f:
+            with open(self.config_path, "w", encoding="utf8") as f:
                 f.write(self.substitute_string(self.config_text, queue_data))
         except Exception as ex:
             print("Error writing output", ex)

@@ -7,7 +7,7 @@ It also works with any streaming software which allows for Text to be read from 
 ## Downloading/Installing
 `cd` into the directory where you want to put the program, then:
 ```
-git clone https://github.com/pixelzerg/NightBotNowPlaying.git
+git clone https://github.com/pixelzery/NightBotNowPlaying.git
 cd NightBotNowPlaying
 python3 -m pip install -r requirements.txt
 ```
