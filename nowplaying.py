@@ -276,20 +276,20 @@ class Client:
                 queue_data = self.get_queue()
                 self._update(queue_data)
 
-                if '_currentSong' in queue_data:
-                    current_song_id = queue_data["_currentSong"].get("_id")
-                    current_track = queue_data["_currentSong"].get("track")
+                current_song = queue_data.get("_currentSong", {})
+                current_song_id = current_song.get("_id")
+                current_track = current_song.get("track", None)
 
-                    if current_track is not None:
-                        if last_song_id != current_song_id:
-                            # song changed
-                            print("Song updated:", current_track.get("title", "??"))
-                            last_song_id = current_song_id
+                if current_track is not None:
+                    if last_song_id != current_song_id:
+                        # song changed
+                        print("Song updated:", current_track.get("title", "??"))
+                        last_song_id = current_song_id
 
-                            song_end = time.time() + current_track.get("duration", 0)
+                        song_end = time.time() + current_track.get("duration", 0)
 
                 time.sleep(self.config_update_delay)
-                
+
             except KeyboardInterrupt:
                 print("Exiting...")
                 break
