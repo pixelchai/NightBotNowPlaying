@@ -7,6 +7,7 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import webbrowser
 import requests
+import traceback
 from typing import Optional
 
 
@@ -265,28 +266,35 @@ class Client:
         song_end = 0
         song_duration = 1e5  # big number to start with
         while True:
-            if self.config_fancy_limit:
-                # sleep randomly according to probability function (sleep less near the beginning and end of songs)
-                if random.random() < self._prob_func(song_end - time.time(), song_duration):
-                    time.sleep(self.config_update_delay)
-                    continue
+            try:
+                if self.config_fancy_limit:
+                    # sleep randomly according to probability function (sleep less near the beginning and end of songs)
+                    if random.random() < self._prob_func(song_end - time.time(), song_duration):
+                        time.sleep(self.config_update_delay)
+                        continue
 
-            queue_data = self.get_queue()
-            self._update(queue_data)
+                queue_data = self.get_queue()
+                self._update(queue_data)
 
-            if '_currentSong' in queue_data:
-                current_song_id = queue_data["_currentSong"]["_id"]
-                current_track = queue_data["_currentSong"].get("track")
+                if '_currentSong' in queue_data:
+                    current_song_id = queue_data["_currentSong"].get("_id")
+                    current_track = queue_data["_currentSong"].get("track")
 
-                if current_track is not None:
-                    if last_song_id != current_song_id:
-                        # song changed
-                        print("Song updated:", current_track.get("title", "??"))
-                        last_song_id = current_song_id
+                    if current_track is not None:
+                        if last_song_id != current_song_id:
+                            # song changed
+                            print("Song updated:", current_track.get("title", "??"))
+                            last_song_id = current_song_id
 
-                        song_end = time.time() + current_track.get("duration", 0)
+                            song_end = time.time() + current_track.get("duration", 0)
 
-            time.sleep(self.config_update_delay)
+                time.sleep(self.config_update_delay)
+                
+            except KeyboardInterrupt:
+                print("Exiting...")
+                break
+            except:
+                traceback.print_exc()
 
 
 if __name__ == '__main__':
