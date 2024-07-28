@@ -17,7 +17,7 @@ python3 -m pip install -r requirements.txt
 You need to provide this program with access to NightBot in order to use it. This is done as follows:
 1. Go to your NightBot control panel's "Applications" page: https://nightbot.tv/account/applications
 2. Click on "New App" ([screenshot](res/applications_page.png))
-3. In the "Add an Application" window that comes up, input "NightBotNowPlaying" in the "Name" field and `https://localhost:5771` in the "Redirect URIs" field. Make sure there is no trailing slash!
+3. In the "Add an Application" window that comes up, input "NightBotNowPlaying" in the "Name" field and `http://localhost:5771` in the "Redirect URIs" field. Make sure the URL is exactly as shown, there should be no trailing slash, and it should start with `http`!
 4. Click "Submit"
 5. Click the orange edit button ([screenshot](res/applications_page_2.png))
 6. An "Edit Application" window should come up, displaying your Client ID and Client Secret ([screenshot](res/applications_edit.png)). To show the Client Secret, press the "New Secret" button.
@@ -34,10 +34,13 @@ Don't share this file or these values with anyone!
 ```
 python3 nowplaying.py
 ```
-If authorisation is required, the program will open up a browser and ask you to input a code.
-1. In the browser window, log in to NightBot (if not already), and click "Allow"
+
+If authorisation is required, the program will automatically open up a browser. Simply click "Allow". You won't need to do this very often (usually only once the first time you use this script, then once every month after that).
+
+<!-- Outdated instructions for manual code entering: -->
+<!-- 1. In the browser window, log in to NightBot (if not already), and click "Allow"
 2. You should be redirected. The page will likely be unable to be reached. The code requested by the program can be found in the URL bar. It should look something like this: `https://localhost:5771/?code=abcdef123456789abcdef123456789ab`.
-3. Copy and paste the code from the URL into the program. In this example, the required code would be `abcdef123456789abcdef123456789ab`.
+3. Copy and paste the code from the URL into the program. In this example, the required code would be `abcdef123456789abcdef123456789ab`. -->
 
 ### Usage in OBS
 1. Make sure the program is running - it should print "Authorized!" in the console if it was able to start successfully
@@ -74,5 +77,5 @@ The variables which may be used in the text string are detailed below:
 Please ensure you have edited the provided `auth.json` file as in the instructions above.
 
 #### 'Unknown error occurred'
-Please ensure that the 'Redirect URI' field when adding an application to NightBot is exactly `https://localhost:5771`, and with no trailing backslash. 
+Please ensure that the 'Redirect URI' field when adding an application to NightBot is exactly `http://localhost:5771`, and with no trailing backslash. 
 You can update/check the 'Redirect URI' field by visiting https://nightbot.tv/account/applications and clicking the orange edit button ([screenshot](res/applications_page_2.png)).
