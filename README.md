@@ -7,7 +7,7 @@ It also works with any streaming software which allows for Text to be read from 
 ## Downloading/Installing
 `cd` into the directory where you want to put the program, then:
 ```
-git clone https://github.com/pixelzery/NightBotNowPlaying.git
+git clone https://github.com/pixelchai/NightBotNowPlaying.git
 cd NightBotNowPlaying
 python3 -m pip install -r requirements.txt
 ```
@@ -17,7 +17,7 @@ python3 -m pip install -r requirements.txt
 You need to provide this program with access to NightBot in order to use it. This is done as follows:
 1. Go to your NightBot control panel's "Applications" page: https://nightbot.tv/account/applications
 2. Click on "New App" ([screenshot](res/applications_page.png))
-3. In the "Add an Application" window that comes up, input "NightBotNowPlaying" in the "Name" field and "https://localhost:5771" in the "Redirect URIs" field
+3. In the "Add an Application" window that comes up, input "NightBotNowPlaying" in the "Name" field and `https://localhost:5771` in the "Redirect URIs" field. Make sure there is no trailing slash!
 4. Click "Submit"
 5. Click the orange edit button ([screenshot](res/applications_page_2.png))
 6. An "Edit Application" window should come up, displaying your Client ID and Client Secret ([screenshot](res/applications_edit.png)). To show the Client Secret, press the "New Secret" button.
@@ -54,7 +54,7 @@ The configurable options are detailed below:
 |--------------|-----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | text         | "{title}" | The text to be outputted<br> - this value supports bracketed variable substitution                                                                                                                 |
 | path         | "np.txt"  | Where the output file should be. (NB: the containing directory must exist)                                                                                                                         |
-| update_delay | 1         | The delay, in seconds, between updating the current songs.<br>Note: don't set this too low - you don't want to overload NightBot's servers!                                                        |
+| update_delay | 1         | How many seconds to wait between checks for updates to the current song.<br>Note: don't set this too low - you don't want to overload NightBot's servers!                                                        |
 | fancy_limit  | false     | Limits the number of updates such that the program updates less <br>during the middle of the song but more at the endings and beginnings.<br>Enable this if you are likely to not skip songs often |
 
 The variables which may be used in the text string are detailed below:
@@ -66,3 +66,13 @@ The variables which may be used in the text string are detailed below:
 | duration               | 191                                | Total duration, in seconds, of the current song  |
 | requester              | test_user_1                        | Username of the user who requested that song     |
 | requester.display_name | test_user_1                        | Display name of the user who requested that song |
+
+
+## Common Issues
+#### 'Missing required OAuth2 parameter(s)'
+
+Please ensure you have edited the provided `auth.json` file as in the instructions above.
+
+#### 'Unknown error occurred'
+Please ensure that the 'Redirect URI' field when adding an application to NightBot is exactly `https://localhost:5771`, and with no trailing backslash. 
+You can update/check the 'Redirect URI' field by visiting https://nightbot.tv/account/applications and clicking the orange edit button ([screenshot](res/applications_page_2.png)).
