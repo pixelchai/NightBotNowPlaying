@@ -233,12 +233,12 @@ class Client:
 
         try:
             return substitute_string(input_string, {
-                "title": current_track["title"],
-                "artist": current_track["artist"],
-                "url": current_track["url"],
-                "duration": current_track["duration"],
-                "requester": requester["name"],
-                "requester.display_name": requester["displayName"]
+                "title": current_track.get("title", "??"),
+                "artist": current_track.get("artist", "??"),
+                "url": current_track.get("url", "??"),
+                "duration": current_track.get("duration", "??"),
+                "requester": requester.get("name", "??"),
+                "requester.display_name": requester.get("displayName", "??")
             })
         except KeyError as ex:
             print("Error parsing queue data", ex)
@@ -261,7 +261,7 @@ class Client:
             return 0
 
     def watch(self):
-        last_song = ""
+        last_song_id = ""
         song_end = 0
         song_duration = 1e5  # big number to start with
         while True:
@@ -274,13 +274,17 @@ class Client:
             queue_data = self.get_queue()
             self._update(queue_data)
 
-            current_song = queue_data["_currentSong"]["_id"]
-            if last_song != current_song:
-                # song changed
-                print("Song updated:", current_song)
-                last_song = current_song
+            if '_currentSong' in queue_data:
+                current_song_id = queue_data["_currentSong"]["_id"]
+                current_track = queue_data["_currentSong"].get("track")
 
-                song_end = time.time() + queue_data["_currentSong"]["track"]["duration"]
+                if current_track is not None:
+                    if last_song_id != current_song_id:
+                        # song changed
+                        print("Song updated:", current_track.get("title", "??"))
+                        last_song_id = current_song_id
+
+                        song_end = time.time() + current_track.get("duration", 0)
 
             time.sleep(self.config_update_delay)
 
