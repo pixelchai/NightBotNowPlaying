@@ -77,5 +77,6 @@ The variables which may be used in the text string are detailed below:
 Please ensure you have edited the provided `auth.json` file as in the instructions above.
 
 #### 'Unknown error occurred'
-Please ensure that the 'Redirect URI' field when adding an application to NightBot is exactly `http://localhost:5771`, and with no trailing backslash. 
+This error message may be shown on the NightBot website when clicking the "Allow" button in the steps above. If so, please ensure that the 'Redirect URI' field when adding an application to NightBot is exactly `http://localhost:5771`, and with no trailing backslash. 
 You can update/check the 'Redirect URI' field by visiting https://nightbot.tv/account/applications and clicking the orange edit button ([screenshot](res/applications_page_2.png)).
+See discussion of this issue here: [#3](https://github.com/pixelchai/NightBotNowPlaying/issues/3).
