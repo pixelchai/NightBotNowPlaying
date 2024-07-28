@@ -4,6 +4,7 @@ import json
 import random
 import time
 import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import webbrowser
 import requests
 from typing import Optional
@@ -37,24 +38,54 @@ def substitute_string(input_string: str, data: dict):
     return output
 
 
+class CodeGatherer:
+    """
+    A simple HTTP server to gather OAuth2 code from NightBot
+    """
+    def __init__(self, port=5771):
+        self.server = None
+        self.port = port
+
+    def get_code(self):
+        class _RequestHandler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                parsed_path = urllib.parse.urlparse(self.path)
+                query = urllib.parse.parse_qs(parsed_path.query)
+
+                if 'code' in query:
+                    self.server.code = query['code'][0]
+                    self.send_response(200)
+                    self.end_headers()
+                    self.wfile.write(b"NightBot authorization complete. You may now close this window.")
+                else:
+                    self.send_response(400)
+                    self.end_headers()
+                    self.wfile.write(b"Code parameter not found.")
+
+            def log_message(self, format, *args):
+                return  # Disable logging
+
+        self.server = HTTPServer(('localhost', self.port), _RequestHandler)
+        self.server.code = None
+
+        # Handle requests until the code is received
+        while self.server.code is None:
+            self.server.handle_request()
+
+        return str(self.server.code).strip()
+
 class Client:
+    """
+    Nightbot client
+    """
     URI_AUTH = "https://api.nightbot.tv/oauth2/authorize"
     URI_TOKEN = "https://api.nightbot.tv/oauth2/token"
     URI_API = "https://api.nightbot.tv/1/"
-    URI_REDIRECT = "https://localhost:5771"
+    LOCAL_PORT = "5771"
+    URI_REDIRECT = "http://localhost:" + str(LOCAL_PORT)
 
     def __init__(self):
         self.auth_path = os.environ.get("AUTH_PATH", "auth.json")
-        self.session = requests.Session()
-
-        # get access token
-        access_token = self._get_token()
-        if access_token is None:
-            return
-        else:
-            print("Authorized!")
-
-        self.session.headers.update({'Authorization': 'Bearer {0}'.format(access_token)})
 
         # load config data
         # defaults
@@ -74,6 +105,21 @@ class Client:
         self.config_update_delay = config_data.get("update_delay", 1)
         self.config_fancy_limit = config_data.get("fancy_limit", False)
 
+        self.config_manual_code_entry = config_data.get("manual_code_entry", False)
+
+
+        # session init
+        self.session = requests.Session()
+
+        # get access token
+        access_token = self._get_token()
+        if access_token is None:
+            return
+        else:
+            print("Authorized!")
+
+        self.session.headers.update({'Authorization': 'Bearer {0}'.format(access_token)})
+
     def _authorize(self, auth_data):
         try:
             params = {
@@ -89,7 +135,11 @@ class Client:
 
         webbrowser.open(Client.URI_AUTH + "?" + urllib.parse.urlencode(params))
 
-        code = input("Please enter the code: ").strip()
+        if not self.config_manual_code_entry:
+            code = CodeGatherer().get_code()
+        else:
+            code = input("Please enter the code: ").strip()
+
         return self._request_access_token(code, auth_data)
 
     def _request_access_token(self, code, auth_data) -> Optional[str]:
@@ -117,7 +167,7 @@ class Client:
 
                     # write data to file
                     with open(self.auth_path, "w") as f:
-                        json.dump(auth_data, f)
+                        json.dump(auth_data, f, indent=4)
 
                     # return access_token
                     return auth_data.get('access_token', None)
@@ -194,6 +244,9 @@ class Client:
             print("Error parsing queue data", ex)
 
     def _update(self, queue_data):
+        """
+        Update the output file
+        """
         try:
             with open(self.config_path, "w", encoding="utf8") as f:
                 f.write(self.substitute_string(self.config_text, queue_data))
@@ -213,6 +266,7 @@ class Client:
         song_duration = 1e5  # big number to start with
         while True:
             if self.config_fancy_limit:
+                # sleep randomly according to probability function (sleep less near the beginning and end of songs)
                 if random.random() < self._prob_func(song_end - time.time(), song_duration):
                     time.sleep(self.config_update_delay)
                     continue
